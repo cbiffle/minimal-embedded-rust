@@ -1,0 +1,9 @@
+Kickoff
+=======
+
+Resources:
+
+- https://github.com/thepowersgang/rust-barebones-kernel
+- http://os.phil-opp.com/
+- http://www.randomhacks.net/bare-metal-rust/
+- http://www.hashmismatch.net/2015/05/18/pragmatic-bare-metal-rust.html

@@ -1,0 +1,64 @@
+Entry Points
+============
+
+When working on bare metal, a program is typically started by the processor
+executing code at a particular address.
+
+On ARMv7-M, it so happens that the processor arrives with an initialized stack
+pointer.  In effect, the processor understands the minimal part of the
+platform's C calling convention, so the reset vector (like other interrupt
+handlers) can simply be a function using that convention.  This stands in
+contrast to most other platforms, where ISRs may have to manually set up their
+stack pointer or save unusual registers before proceeding.
+
+Anyway.
+
+In C/C++, we often just write the reset vector thus:
+
+    void reset_handler(void) {
+      // do stuff
+    }
+
+We can do the same in Rust, with the additional ability to declare the function
+as diverging, thus preventing returns:
+
+    pub extern fn reset_handler() -> ! {
+      // do stuff
+    }
+
+Which is awesome, except I can't figure out how to get Rust to recognize this as
+the entry point.
+
+Rust has two facilities for overriding program entry points, `#[main]` and
+`#[start]` (as well as `#[lang = "start"]`, which acts similarly to `#[start]`).
+
+But it doesn't quite work for me so far.  For one, both `#[main]` and `#[start]`
+require a Rust (not `extern`) function taking C-style argc/argv arguments, which
+isn't appropriate.
+
+
+
+Interesting.
+
+    https://github.com/mdaffin/embedded-examples/tree/master/teensy-3-rust
+
+This person is using the staticlib approach, and it looks like I might have
+misinterpreted it.
+
+- Cargo is configured to build a binary.
+- The `main.rs` file declares `#![crate_type="staticlib"]`.
+- It includes a bogus `start` item that calls through to the real reset vector,
+  but this gets dropped in the output.
+
+The bogus start item appears mandatory; removing it causes the compiler to
+complain.
+
+Disabling the `staticlib` crate type doesn't seem to matter.  The crate type
+being passed on the commandline is probably winning.
+
+
+`#[no_mangle]` appears to affect external symbol visibility in staticlibs.  If I
+remove it from `ISR_VECTORS` the symbol is no longer visible in the object file
+produced in the archive.
+
+Removing `#[no_mangle]` and adding `#[linkage(external)]` doesn't fix this.

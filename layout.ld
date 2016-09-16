@@ -1,4 +1,3 @@
-__STACK_BASE = 0x2001FFFF;
 _data_load = LOADADDR(.data);
 
 ENTRY(main)
@@ -10,6 +9,8 @@ MEMORY
     ram(WAIL)   : ORIGIN = 0x20000000, LENGTH = 112K + 16K
     /* ram(WAIL) : ORIGIN = 0x2001C000, LENGTH = 16K */
 }
+
+__STACK_BASE = ORIGIN(ram_c) + LENGTH(ram_c);
 
 __aeabi_unwind_cpp_pr0 = abort;
 __aeabi_unwind_cpp_pr1 = abort;

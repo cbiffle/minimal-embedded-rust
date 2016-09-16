@@ -1,6 +1,6 @@
 _data_load = LOADADDR(.data);
 
-ENTRY(reset_handler)
+ENTRY(ISR_VECTORS)
 
 MEMORY
 {

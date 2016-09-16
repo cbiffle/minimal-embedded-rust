@@ -45,6 +45,7 @@ pub struct ExceptionTable {
 /// Sigh.
 unsafe impl Sync for ExceptionTable {}
 
+#[no_mangle]
 #[link_section=".isr_vector"]
 pub static ISR_VECTORS : ExceptionTable = ExceptionTable {
     initial_stack: unsafe { &__STACK_BASE },

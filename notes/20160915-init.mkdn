@@ -7,3 +7,100 @@ Resources:
 - http://os.phil-opp.com/
 - http://www.randomhacks.net/bare-metal-rust/
 - http://www.hashmismatch.net/2015/05/18/pragmatic-bare-metal-rust.html
+
+
+-----
+
+Okay.  By combining a bunch of tutorials, code from Zinc, and a bunch of
+StackOverflow discussions, I've generated a binary.  From manual inspection it
+seems like it would boot and correctly enter an infinite loop.
+
+Here are my thoughts so far.
+
+
+
+To correctly build this code, one must use the nightly toolchain.  To enable the
+nightly toolchain, the current fashion is to run
+
+    rustup override add nightly
+
+in the project directory.  This *does not* generate any artifacts in the
+directory, where they could be checked in.  Instead, it alters
+
+    ~/.multirust/settings.toml
+
+which means that this command must be run in *every* clone, and the settings are
+permanent on any directory with the same name --- even if it's removed and
+recreated.
+
+I don't know if the Rust devs are making this awkward on purpose.  I know they
+want to discourage people from relying on bleeding-edge features, but I would
+like an override switch for projects that *require* bleeding edge.
+
+
+
+On the other hand, Cargo's default build target *can* be overridden by a file
+checked into the project.  See ~./.cargo/settings`.
+
+
+
+Rust's startup process seems fundamentally C-like, with the exception that I
+haven't seen any evidence of init function stubs being generated.  This implies
+that Rust, unlike C, only allows initialized data to consist of compile- or
+link-time constant expressions.  If true, this is interesting; if false, I'm
+going to have some confusing crashes down the line when I fail to implement it
+correctly.
+
+Anyway.
+
+The minimal job of a Rust startup routine is to copy initialized data into place
+and zero BSS.  Very much like C.
+
+
+
+The optional feature `#[start]` can mark a function as the entry point.  It must
+have a C-style signature though.
+
+A lot of folks doing similar things online are building their applications as a
+static library, which they then link --- typically outside Cargo.  I think this
+is because, when building an executable, Cargo/Rust have ideas about how the
+entry point will work.  Even when using `#[start]`.  In particular,
+
+- The compiler generates a `main` shim to serve as the entry point.
+- It then calls through to the function marked `#[start]`.
+- Both functions must accept argc/argv and return a value.
+
+The `main` shim seems very thin, and likely just serves to adapt the C calling
+convention (presumably used by the operating system) to the Rust calling
+convention used by the start routine.
+
+The overall result is awkward but usable.  In a bare-metal context on ARMv7-M,
+the argc/argv "arguments" received by `main` will be arbitrary.  As long as they
+are ignored, `main` does not dereference the argv pointer or do anything else
+undefined... so it's fragile but safe.
+
+I'd really like to figure out how to fix this without leaving Cargo.
+
+
+
+In a release build, all the code is "optimized" away, producing a zero-length
+binary.  I'm not sure why, and I think it's probably happening before `ld`.
+
+In debug builds, the output is nearly unreadable.  (I am no longer accustomed to
+reading completely unoptimized compiler output.)
+
+
+
+Getting the stack pointer into the vector table took some gymnastics.  It works
+now, but I had to circumvent a couple checks (manually declare the table as
+`Sync` and obtain the address with `unsafe`).
+
+On the up side: optional function references in the table are really quite
+pleasant.
+
+
+
+
+
+
+

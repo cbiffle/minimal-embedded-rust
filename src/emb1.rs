@@ -1,23 +1,14 @@
 #![no_std]
 #![feature(lang_items)]
-#![feature(start)]
 
 extern {
     /// This symbol is exported by the linker script, and defines the initial
     /// stack pointer.
     static __STACK_BASE: u32;
-
-    /// We plug the compiler-generated main shim into the vector table as reset.
-    /// This is technically wrong.  The shim expects to receive argc/argv in
-    /// r0/r1, and the reset vector receives those registers uninitialized.  But
-    /// since we ignore them anyway, it's safe in practice. (TODO)
-    #[no_mangle]
-    fn main(argc: isize, argv: *const *const u8) -> isize;
 }
 
-#[start]
-#[inline(never)]  // for inspection
-pub fn start(_: isize, _: *const *const u8) -> isize {
+#[no_mangle]
+pub unsafe extern fn reset_handler() -> ! {
     loop {}
 }
 
@@ -28,7 +19,7 @@ type Handler = extern fn();
 #[repr(C, packed)]
 pub struct ExceptionTable {
     initial_stack: *const u32,
-    reset: unsafe extern fn(argc: isize, argv: *const *const u8) -> isize,
+    reset: unsafe extern fn() -> !,
 
     nmi: Option<Handler>,
     hard_fault: Option<Handler>,
@@ -57,7 +48,7 @@ unsafe impl Sync for ExceptionTable {}
 #[link_section=".isr_vector"]
 pub static ISR_VECTORS : ExceptionTable = ExceptionTable {
     initial_stack: unsafe { &__STACK_BASE },
-    reset: main,
+    reset: reset_handler,
 
     nmi: Some(trap),
     hard_fault: Some(trap),

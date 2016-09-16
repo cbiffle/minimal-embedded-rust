@@ -1,6 +1,6 @@
 _data_load = LOADADDR(.data);
 
-ENTRY(main)
+ENTRY(reset_handler)
 
 MEMORY
 {

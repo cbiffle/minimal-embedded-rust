@@ -6,6 +6,9 @@ authors = ["cbiffle <code@cliffle.com>"]
 [dependencies]
 rust-libcore = "*"
 
+[lib]
+crate-type = ["staticlib"]
+
 [profile.dev]
 panic = "abort"
 

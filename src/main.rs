@@ -1,18 +1,32 @@
 #![no_std]
 #![feature(lang_items,start)]
 
+/******************************************************************************/
+
+// Items required by some part of core or the runtime.
+
+#[lang = "panic_fmt"]
+extern fn panic_fmt() -> ! {loop {}}
+
+#[no_mangle]
+pub extern "C" fn abort() -> ! { loop {} }
+
+/// This is included to mollify the compiler, but is not actually used and
+/// doesn't wind up getting linked into the output.
+#[start]
+fn _start(_: isize, _: *const *const u8) -> isize {
+    loop {}
+}
+
+/******************************************************************************/
+
+// Application environment.
+
 extern {
     /// This symbol is exported by the linker script, and defines the initial
     /// stack pointer.
     static __STACK_BASE: u32;
 }
-
-#[no_mangle]
-pub unsafe extern fn reset_handler() -> ! {
-    loop {}
-}
-
-extern "C" fn trap() { loop {} }
 
 type Handler = extern fn();
 
@@ -45,6 +59,18 @@ pub struct ExceptionTable {
 /// Sigh.
 unsafe impl Sync for ExceptionTable {}
 
+
+/******************************************************************************/
+
+// Application.
+
+#[no_mangle]
+pub unsafe extern fn reset_handler() -> ! {
+    loop {}
+}
+
+extern "C" fn trap() { loop {} }
+
 #[no_mangle]
 #[link_section=".isr_vector"]
 pub static ISR_VECTORS : ExceptionTable = ExceptionTable {
@@ -66,16 +92,3 @@ pub static ISR_VECTORS : ExceptionTable = ExceptionTable {
     pend_sv: Some(trap),
     sys_tick: Some(trap),
 };
-
-#[lang = "panic_fmt"]
-extern fn panic_fmt() -> ! {loop {}}
-
-#[no_mangle]
-pub extern "C" fn abort() -> ! { loop {} }
-
-/// This is included to mollify the compiler, but is not actually used and
-/// doesn't wind up getting linked into the output.
-#[start]
-fn _start(_: isize, _: *const *const u8) -> isize {
-    unsafe { (ISR_VECTORS.reset)() }
-}

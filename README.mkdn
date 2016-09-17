@@ -1,0 +1,80 @@
+Minimal Cortex-M (STM32F4) Rust Example
+=======================================
+
+This demonstrates how to write, build, and link a very minimal program for the
+STM32F4 microcontroller (a Cortex-M4 using the ARMv7E-M instruction set).
+
+Note that this program is *very* minimal.  It doesn't blink an LED --- it simply
+enters an infinite loop.  This is not intended to show how to use the STM32F4's
+peripherals, but rather, how to start a bare-metal Rust project.
+
+This is all tested on Rust post-1.11 nightly (circa 2016-09-16).
+
+I've done my best to comment things like crazy.  Here's a rough tour of the
+project:
+
+- The Rust bits:
+  - `Cargo.toml` defines the build.  The main interesting bits are the
+    dependency on `rust-libcore` (avoiding the standard library) and the use of
+    `panic = "abort"` (avoiding the need for some unwinding code).
+  - `src/main.rs` is a self-contained program, including definitions for the
+    hardware vector table.
+  - I've included `Cargo.lock` to nail down the dependencies and help you
+    reproduce my results.
+  - The files in `notes` describe my journey while writing this example.
+
+- The build environment:
+  - `thumbv7em-none-eabi.json` is an LLVM target definition for the Cortex-M4,
+    lightly modified from the definition used by [Zinc](http://zinc.rs).  It's
+    very cool that we can just plug this in without modifying the toolchain.
+  - `.cargo/config` overrides the default linker to use the ARM one.
+  - `layout.ld` is a linker script that describes how to map the compiled
+    program into an STM32F4 binary image.
+  - Optionally, `Vagrantfile` and `vm-bootstrap.sh` describe how to spin up a
+    self-contained VM for building this project --- making it possible to try
+    this out without installing either Rust or an ARM toolchain.
+
+## Building with Vagrant
+
+This method will set up a self-contained environment, including Rust and an ARM
+toolchain, without modifying your system.  This approach should work on Mac and
+Windows in addition to Linux.
+
+Install [Vagrant](https://www.vagrantup.com/).  I've tested on 1.8.4.
+
+Clone this repository.
+
+Provision your build environment:
+
+    $ vagrant up
+
+This may take a few minutes, since it needs to download toolchains and whatnot.
+
+Enter the environment and build:
+
+    $ vagrant ssh
+    $ cd /vagrant
+    $ cargo build
+
+The ARM binary will be deposited in `target/thumbv7em-none-eabi/debug/emb1`.
+
+## Building with native Rust and ARM toolchain
+
+This approach has only been tested on Linux.
+
+Install Rust and a toolchain for `arm-none-eabi` (such as [the one packaged for
+Ubuntu](https://launchpad.net/gcc-arm-embedded)).
+
+Clone this repository.
+
+Building this project requires the `nightly` toolchain, so (in the clone) run
+
+    $ rustup override add nightly
+
+Now you can just run:
+
+    $ cargo build
+
+The ARM binary will be deposited in `target/thumbv7em-none-eabi/debug/emb1`.
+
+Release-mode builds work too; add `--release`.

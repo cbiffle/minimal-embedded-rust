@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(lang_items)]
+#![feature(lang_items,start)]
 
 extern {
     /// This symbol is exported by the linker script, and defines the initial
@@ -73,3 +73,9 @@ extern fn panic_fmt() -> ! {loop {}}
 #[no_mangle]
 pub extern "C" fn abort() -> ! { loop {} }
 
+/// This is included to mollify the compiler, but is not actually used and
+/// doesn't wind up getting linked into the output.
+#[start]
+fn _start(_: isize, _: *const *const u8) -> isize {
+    unsafe { (ISR_VECTORS.reset)() }
+}

@@ -56,6 +56,10 @@ complain.
 Disabling the `staticlib` crate type doesn't seem to matter.  The crate type
 being passed on the commandline is probably winning.
 
+Okay, yes.  This project is actually building as a binary, and the apparent
+crate type declaration is ignored.  The actual trick being used here is the fake
+start item.
+
 
 `#[no_mangle]` appears to affect external symbol visibility in staticlibs.  If I
 remove it from `ISR_VECTORS` the symbol is no longer visible in the object file

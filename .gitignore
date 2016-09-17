@@ -2,4 +2,3 @@ target
 .vagrant/
 .swp
 .*.swp
-build/

@@ -23,31 +23,27 @@ extern {
     static __STACK_BASE: u32;
 }
 
-type Handler = extern fn();
+type Handler = extern "C" fn();
 
 #[repr(C, packed)]
 pub struct ExceptionTable {
     initial_stack: *const u32,
     reset: unsafe extern fn() -> !,
 
-    nmi: Option<Handler>,
-    hard_fault: Option<Handler>,
-    mm_fault: Option<Handler>,
-    bus_fault: Option<Handler>,
-    usage_fault: Option<Handler>,
-
-    _reserved0: Option<Handler>,
-    _reserved1: Option<Handler>,
-    _reserved2: Option<Handler>,
-    _reserved3: Option<Handler>,
-
-    sv_call: Option<Handler>,
-    debug_mon: Option<Handler>,
-
-    _reserved4: Option<Handler>,
-
-    pend_sv: Option<Handler>,
-    sys_tick: Option<Handler>,
+    nmi:          Option<Handler>,
+    hard_fault:   Option<Handler>,
+    mm_fault:     Option<Handler>,
+    bus_fault:    Option<Handler>,
+    usage_fault:  Option<Handler>,
+    _reserved0:   Option<Handler>,
+    _reserved1:   Option<Handler>,
+    _reserved2:   Option<Handler>,
+    _reserved3:   Option<Handler>,
+    sv_call:      Option<Handler>,
+    debug_mon:    Option<Handler>,
+    _reserved4:   Option<Handler>,
+    pend_sv:      Option<Handler>,
+    sys_tick:     Option<Handler>,
 }
 
 /// Const pointers are not inherently Sync.  We must be Sync to be static.

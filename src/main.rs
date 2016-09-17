@@ -1,20 +1,15 @@
-#![no_std]
 #![feature(lang_items,start)]
+#![no_std]
+#![no_main]
 
 /******************************************************************************/
 
 // Items required by some part of core or the runtime.
 
 #[lang = "panic_fmt"]
-extern fn panic_fmt() -> ! {loop {}}
-
-#[no_mangle]
-pub extern "C" fn abort() -> ! { loop {} }
-
-/// This is included to mollify the compiler, but is not actually used and
-/// doesn't wind up getting linked into the output.
-#[start]
-fn _start(_: isize, _: *const *const u8) -> isize {
+pub extern fn panic_fmt(_msg: core::fmt::Arguments,
+                        _file: &'static str,
+                        _line: u32) -> ! {
     loop {}
 }
 
@@ -64,7 +59,6 @@ unsafe impl Sync for ExceptionTable {}
 
 // Application.
 
-#[no_mangle]
 pub unsafe extern fn reset_handler() -> ! {
     loop {}
 }

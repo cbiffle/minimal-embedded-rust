@@ -8,7 +8,7 @@ Note that this program is *very* minimal.  It doesn't blink an LED --- it simply
 enters an infinite loop.  This is not intended to show how to use the STM32F4's
 peripherals, but rather, how to start a bare-metal Rust project.
 
-This is all tested on Rust post-1.11 nightly (circa 2016-09-16).
+This is all tested on Rust post-1.14 nightly (circa 2016-10-13).
 
 I've done my best to comment things like crazy.  Here's a rough tour of the
 project:
